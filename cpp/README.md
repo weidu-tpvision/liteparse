@@ -15,12 +15,33 @@ Dependency-free C++17 port of LiteParse's `ocria-nano` OCR pipeline (`det.onnx` 
    ```
    *(If you don't have `lit` / `libonnxruntime.so` installed yet, pass `--with-runtime` to also download `libonnxruntime.so` for your current Linux architecture, `x86_64` or `aarch64`.)*
 
-3. **Build with CMake**:
+3. **Build with CMake** (native `x86_64` or `aarch64`):
    ```bash
    cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
    cmake --build cpp/build -j
    ```
-   *(To use a custom ONNX Runtime SDK or cross-compilation toolchain, pass `-DORT_INCLUDE_DIR=/path/to/include -DORT_LIB_PATH=/path/to/libonnxruntime.so`.)*
+
+   **Cross-compiling** (`x86_64`, `arm64`, or `arm32` / `armv7-a` with NEON hard-float):
+   ```bash
+   # Linux x86_64
+   cmake -S cpp -B cpp/build-x86_64 \
+     -DCMAKE_TOOLCHAIN_FILE=cpp/cmake/toolchain-linux-x86_64.cmake \
+     -DORT_LIB_PATH=/path/to/x86_64/libonnxruntime.so
+   cmake --build cpp/build-x86_64 -j
+
+   # Linux arm64 (aarch64)
+   cmake -S cpp -B cpp/build-arm64 \
+     -DCMAKE_TOOLCHAIN_FILE=cpp/cmake/toolchain-linux-arm64.cmake \
+     -DORT_LIB_PATH=/path/to/arm64/libonnxruntime.so
+   cmake --build cpp/build-arm64 -j
+
+   # Linux arm32 (armv7-a, NEON hard-float)
+   cmake -S cpp -B cpp/build-arm32 \
+     -DCMAKE_TOOLCHAIN_FILE=cpp/cmake/toolchain-linux-arm32.cmake \
+     -DORT_LIB_PATH=/path/to/arm32/libonnxruntime.so
+   cmake --build cpp/build-arm32 -j
+   ```
+   *(Custom flags like `-DCMAKE_CXX_FLAGS="-march=..."` override the default arch flags; cross-compiled binaries use `$ORIGIN` RPATH so placing `libonnxruntime.so.1` alongside `ocria_cli` works on target.)*
 
 4. **Run CLI**:
    ```bash
