@@ -81,6 +81,7 @@ packages/rust/vendor/
 target/
 
 # Standalone C++ ocria-nano build & fetched third-party headers/models
+!cpp/CMakeLists.txt
 cpp/build/
 cpp/third_party/
 tests/models/

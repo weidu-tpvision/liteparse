@@ -2,7 +2,7 @@
 
 Dependency-free C++17 port of LiteParse's `ocria-nano` OCR pipeline (`det.onnx` + `rec_latin.onnx`, ~1.3 MB weights) running on ONNX Runtime — **zero OpenCV, zero PDFium, zero Rust**.
 
-## Quick Start (Linux / DGX Spark)
+## Quick Start (Linux `x86_64` & `aarch64`)
 
 1. **Pull `ocria-nano` models locally** (into `tests/models/`):
    ```bash
@@ -13,13 +13,14 @@ Dependency-free C++17 port of LiteParse's `ocria-nano` OCR pipeline (`det.onnx` 
    ```bash
    python3 cpp/scripts/fetch_headers.py
    ```
+   *(If you don't have `lit` / `libonnxruntime.so` installed yet, pass `--with-runtime` to also download `libonnxruntime.so` for your current Linux architecture, `x86_64` or `aarch64`.)*
 
 3. **Build with CMake**:
    ```bash
    cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
    cmake --build cpp/build -j
    ```
-   *(To use your own ONNX Runtime build—e.g. a 32-bit ARMv7 TV SDK—pass `-DORT_INCLUDE_DIR=/path/to/include -DORT_LIB_PATH=/path/to/libonnxruntime.so`.)*
+   *(To use a custom ONNX Runtime SDK or cross-compilation toolchain, pass `-DORT_INCLUDE_DIR=/path/to/include -DORT_LIB_PATH=/path/to/libonnxruntime.so`.)*
 
 4. **Run CLI**:
    ```bash
@@ -32,5 +33,5 @@ Dependency-free C++17 port of LiteParse's `ocria-nano` OCR pipeline (`det.onnx` 
    ```
 
 ## Docs
-- [docs/CPP_OCRIA_PLAN.md](docs/CPP_OCRIA_PLAN.md) — Architecture, tensor contract, and 32-bit ARMv7 portability notes.
+- [docs/CPP_OCRIA_PLAN.md](docs/CPP_OCRIA_PLAN.md) — Architecture, tensor contract, and portability notes.
 - [docs/OCR_MODEL_GUIDE.md](docs/OCR_MODEL_GUIDE.md) — `ocria-nano` specs, pre/postprocessing formulas, and PP-OCRv5/v6 comparison.

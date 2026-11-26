@@ -14,7 +14,7 @@ struct OcriaConfig {
     float det_min_score = 0.6f; // minimum mean prob per connected component
     float det_merge = 0.6f;     // collinear box merge gap in line-heights (0 = off)
     bool filter_junk = true;    // drop symbol-only / tiny low-confidence noise
-    size_t max_run_pixels = 0;  // 0 = unbounded (set e.g. 4*32*1280 for low-RAM TVs)
+    size_t max_run_pixels = 0;  // 0 = unbounded (set e.g. 4*32*1280 for low-RAM devices)
 };
 
 struct OcrLine {

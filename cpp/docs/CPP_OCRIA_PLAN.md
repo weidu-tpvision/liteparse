@@ -1,9 +1,9 @@
-# C++ Implementation Plan: English/Latin `ocria-nano` OCR on DGX Spark
+# C++ Implementation Plan: English/Latin `ocria-nano` OCR (Linux `x86_64` & `aarch64`)
 
-**Target Host (Phase 1):** NVIDIA DGX Spark (`aarch64` / ARMv9, Ubuntu 24.04, `g++ 13.3.0`, `cmake 3.28.3`)  
+**Target Hosts:** General Linux (`x86_64` and `aarch64`, GCC/Clang with C++17, CMake 3.20+)  
 **Models Used:** `det.onnx` (348 KB) + `rec_latin.onnx` (944 KB) + `rec_latin.charset.json` + `det.meta.json` (**~1.3 MB total**)  
-**Runtime:** `tests/models/ocria-nano/runtime/libonnxruntime.so` (ONNX Runtime 1.31.1, already pulled locally)  
-**Design Goal:** Zero-OpenCV, zero-PDFium, dependency-free C++17 library + CLI with exact parity against LiteParse's Rust `ocria-nano` engine, structured so porting to 32-bit ARMv7 later is a clean recompile.
+**Runtime:** ONNX Runtime 1.31.1 (`libonnxruntime.so` for `linux-x64` or `linux-arm64`)  
+**Design Goal:** Zero-OpenCV, zero-PDFium, dependency-free C++17 library + CLI with exact parity against LiteParse's Rust `ocria-nano` engine, portable across 64-bit and 32-bit Linux targets.
 
 ---
 
@@ -20,7 +20,7 @@
 ### Out of Scope for Phase 1
 - CJK / RTL / World recognizers and `router.onnx` (can be added later as optional modules if upside-down 180° flip detection is needed).
 - `tablenet.onnx` (LayoutNet) and PDFium integration.
-- ARMv7 32-bit cross-compilation (kept easy via clean types, not built in Phase 1).
+- Cross-compilation toolchains (supported via `-DORT_INCLUDE_DIR` / `-DORT_LIB_PATH`, not bundled).
 
 ---
 
@@ -154,11 +154,11 @@ Port directly from `crates/liteparse/src/ocr/ocria/img.rs`:
 
 ---
 
-## 6. 32-Bit ARMv7 Portability Notes (Kept Clean from Day 1)
+## 6. Cross-Architecture & 32-Bit Portability Notes
 
-Even though Phase 1 builds and runs on 64-bit DGX Spark, following these rules makes the future ARMv7 TV port painless:
-1. **ORT tensor shapes**: Always use `int64_t` (`std::array<int64_t, 4>`) for ONNX Runtime shape vectors—never `size_t` or `long` (which are 32-bit on ARMv7).
+Keeping the C++17 implementation portable across `x86_64`, `aarch64`, and 32-bit Linux targets:
+1. **ORT tensor shapes**: Always use `int64_t` (`std::array<int64_t, 4>`) for ONNX Runtime shape vectors—never `size_t` or `long`.
 2. **Pixel buffer indexing**: Use `size_t` for flat array indices and guard `width * height * channels` against overflow.
-3. **Bounded recognizer batching**: Keep a configurable `max_run_pixels` cap (default unbounded on Spark; e.g. `4 * 32 * 1280` on TV) to bound peak activation RAM.
-4. **No x86/ARM64-only intrinsics**: Keep `img_ops.cpp` in clean portable C++17 (GCC auto-vectorizes `-O3` loops to NEON on both ARMv9 and ARMv7 `-mfpu=neon`).
-5. **Runtime swap**: On TV, simply point CMake's `ORT_LIB_PATH` to your custom 32-bit `libonnxruntime.so` and pass your ARMv7 toolchain file.
+3. **Bounded recognizer batching**: Keep a configurable `max_run_pixels` cap (default unbounded; e.g. `4 * 32 * 1280` on memory-constrained devices) to bound peak activation RAM.
+4. **No architecture-specific intrinsics**: Keep `img_ops.cpp` in clean portable C++17 so GCC/Clang auto-vectorizes `-O3` loops across `x86_64` (SSE/AVX) and `aarch64` (NEON).
+5. **Runtime swap**: Point CMake's `-DORT_LIB_PATH` and `-DORT_INCLUDE_DIR` at any target's `libonnxruntime.so` and headers.
